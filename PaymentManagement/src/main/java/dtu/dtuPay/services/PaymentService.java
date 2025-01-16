@@ -22,7 +22,7 @@ public class PaymentService {
     MessageQueue queue;
     PaymentRepository paymentRepository = PaymentRepository.getInstance();
 
-    public PaymentService(RabbitMqQueue mq) {
+    public PaymentService(MessageQueue mq) {
         this.queue = mq;
         // Get payments
         this.queue.addHandler(GET_PAYMENTS_REQUESTED, this::handleGetPaymentsRequested);
