@@ -11,9 +11,9 @@ public class PaymentRepository {
     private static PaymentRepository instance;
     private HashMap<UUID, Payment> payments;
     // <UUID paymentId, UUID customerId>
-    private HashMap<UUID, List<UUID>> customerPayments;
+    private HashMap<UUID, List<UUID>> customerPayments = new HashMap<>();;
     // <UUID paymentId, UUID merchantId>
-    private HashMap<UUID, List<UUID>> merchantPayments;
+    private HashMap<UUID, List<UUID>> merchantPayments = new HashMap<>();;
 
     private PaymentRepository() {
         this.payments = new HashMap<>();
@@ -55,5 +55,27 @@ public class PaymentRepository {
         ).toList();
 
         return paymentList;
+    }
+
+    public void addCustomerPayment(UUID customerId, UUID paymentId) {
+        List<UUID> customerPaymnetsIdList = customerPayments.get(customerId);
+
+        if (customerPaymnetsIdList == null) {
+            customerPaymnetsIdList = new ArrayList<>();
+            customerPayments.put(customerId, customerPaymnetsIdList);
+        }
+
+        customerPaymnetsIdList.add(paymentId);
+    }
+
+    public void addMerchantPayment(UUID merchantId, UUID paymentId) {
+        List<UUID> merchantPaymentsIdList = merchantPayments.get(merchantId);
+
+        if (merchantPaymentsIdList == null) {
+            merchantPaymentsIdList = new ArrayList<>();
+            merchantPayments.put(merchantId, merchantPaymentsIdList);
+        }
+
+        merchantPaymentsIdList.add(paymentId);
     }
 }
