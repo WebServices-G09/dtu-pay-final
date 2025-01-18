@@ -1,10 +1,12 @@
 package dtu.dtuPay.services;
 
+import com.google.gson.Gson;
 import dtu.dtuPay.models.Payment;
 import dtu.dtuPay.repositeries.PaymentRepository;
 import messaging.Event;
 import messaging.MessageQueue;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -139,33 +141,41 @@ public class PaymentService {
 
         if (!isValid) {
             correlations.get(correlationId).complete(null);
-            Event event = new Event(PAYMENT_COMPLETED, new Object[] { success });
+            Event event = new Event(PAYMENT_COMPLETED, new Object[] { customerId, isValid });
+            Exception exception = new Exception("Token Validation Failed");
+            publishPaymentFailureException(exception);
         }
-
-
     }
 
     public void handleGetMerchantPaymentsRequested(Event ev) {
         UUID merchantId = ev.getArgument(0, UUID.class);
         List<Payment> paymentList = paymentRepository.getMerchantPayments(merchantId);
+        paymentList.sort(Comparator.comparing(Payment::getId));
 
-        Event event = new Event(MERCHANT_PAYMENTS_FETCHED, new Object[] {paymentList});
+        Event event = new Event(MERCHANT_PAYMENTS_FETCHED, new Object[] { serialisePaymentListToJson(paymentList) });
         queue.publish(event);
     }
 
     public void handleGetCustomerPaymentsRequested(Event ev) {
         UUID customerId = ev.getArgument(0, UUID.class);
         List<Payment> paymentList = paymentRepository.getCustomerPayments(customerId);
+        paymentList.sort(Comparator.comparing(Payment::getId));
 
-        Event event = new Event(CUSTOMER_PAYMENTS_FETCHED, new Object[] {paymentList});
+        Event event = new Event(CUSTOMER_PAYMENTS_FETCHED, new Object[] { serialisePaymentListToJson(paymentList) });
         queue.publish(event);
     }
 
     public void handleGetPaymentsRequested(Event ev) {
         List<Payment> paymentList = paymentRepository.getPayments();
+        paymentList.sort(Comparator.comparing(Payment::getId));
 
-        Event event = new Event(PAYMENTS_FETCHED, new Object[] {paymentList});
+        Event event = new Event(PAYMENTS_FETCHED, new Object[] { serialisePaymentListToJson(paymentList) });
         queue.publish(event);
+    }
+
+    private String serialisePaymentListToJson(List<Payment> paymentList) {
+        Gson gson = new Gson();
+        return gson.toJson(paymentList);
     }
 
 }

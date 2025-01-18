@@ -45,7 +45,7 @@ public class PaymentRepository {
                 payment -> customerPaymnetsIdList.contains(payment.getId())
         ).toList();
 
-        return paymentList;
+        return new ArrayList<>(paymentList);
     }
 
     public List<Payment> getMerchantPayments(UUID merchantId) {
@@ -54,7 +54,7 @@ public class PaymentRepository {
                 payment -> merchantPaymnetsIdList.contains(payment.getId())
         ).toList();
 
-        return paymentList;
+        return new ArrayList<>(paymentList);
     }
 
     public void addCustomerPayment(UUID customerId, UUID paymentId) {

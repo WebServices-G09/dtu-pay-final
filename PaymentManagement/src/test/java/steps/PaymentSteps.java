@@ -1,5 +1,6 @@
 package steps;
 
+import com.google.gson.Gson;
 import dtu.dtuPay.models.Payment;
 import dtu.dtuPay.repositeries.PaymentRepository;
 import dtu.dtuPay.services.PaymentService;
@@ -9,9 +10,7 @@ import io.cucumber.java.en.When;
 import messaging.Event;
 import messaging.MessageQueue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -58,15 +57,14 @@ public class PaymentSteps {
         assertNotNull(expectedPayment.getId());
     }
 
-    // getPayment service test
+    // getPayments service test
     @Given("a list of payments are present in the payment repository")
     public void aListOfPaymentsArePresentInThePaymentRepository() {
         expectedPaymentList = new ArrayList<>(){};
-        expectedPaymentList.add(new Payment(UUID.randomUUID(),UUID.randomUUID(),10));
-        expectedPaymentList.add(new Payment(UUID.randomUUID(),UUID.randomUUID(),20));
-        expectedPaymentList.add(new Payment(UUID.randomUUID(),UUID.randomUUID(),13));
 
-        for (Payment payment : expectedPaymentList) {
+        for (int i = 0; i < 3; i++) {
+            Payment payment = new Payment(UUID.randomUUID(),UUID.randomUUID(),10 + i);
+            expectedPaymentList.add(payment);
             repository.addPayment(payment);
         }
     }
@@ -79,12 +77,61 @@ public class PaymentSteps {
 
     @Then("the payments are fetched and the {string} event is sent")
     public void thePaymentsAreFetchedAndTheEventIsSent(String eventName) {
-        Event event = new Event(eventName, new Object[] {expectedPaymentList});
+        expectedPaymentList.sort(Comparator.comparing(Payment::getId));
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(expectedPaymentList.toArray());
+
+        Event event = new Event(eventName, new Object[] { jsonString });
         verify(queue).publish(event);
+
+        // Deserialize List object
+//        Gson gson = new Gson();
+//        String jsonResponse = actualEvent.getArgument(0, String.class);
+//        List<Payment> actualPayments = gson.fromJson(jsonResponse, new GenericType<List<Payment>>(){}.getType());
     }
 
-    @Then("the manager gets the list of payments")
-    public void the_manager_gets_the_list_of_payments() {
+    @Then("the user gets the list of payments")
+    public void the_user_gets_the_list_of_payments() {
         assertFalse(expectedPaymentList.isEmpty());
+    }
+
+    // getCustomerPayments service test
+    @Given("a list of payments are present in the payment repository for customer {string}")
+    public void aListOfPaymentsArePresentInThePaymentRepositoryForCustomer(String customerId) {
+        expectedPaymentList = new ArrayList<>(){};
+
+        for (int i = 0; i < 3; i++) {
+            Payment payment = new Payment(UUID.randomUUID(), UUID.randomUUID(),10 + i);
+
+            expectedPaymentList.add(payment);
+            repository.addPayment(payment);
+            repository.addCustomerPayment(UUID.fromString(customerId), payment.getId());
+        }
+    }
+
+    @When("{string} event to get all the customer payments is received for customer {string}")
+    public void eventToGetAllTheCustomerPaymentsIsReceived(String eventName, String customerId) {
+        Event event = new Event(eventName, new Object[] { UUID.fromString(customerId) });
+        service.handleGetCustomerPaymentsRequested(event);
+    }
+
+    // getMerchantPayments service test
+    @Given("a list of payments are present in the payment repository for merchant {string}")
+    public void aListOfPaymentsArePresentInThePaymentRepositoryForMerchant(String merchantIdValue) {
+        expectedPaymentList = new ArrayList<>(){};
+        UUID merchantId = UUID.fromString(merchantIdValue);
+        for (int i = 0; i < 3; i++) {
+            Payment payment = new Payment(UUID.randomUUID(),merchantId,10 + i);
+
+            expectedPaymentList.add(payment);
+            repository.addPayment(payment);
+            repository.addMerchantPayment(merchantId, payment.getId());
+        }
+    }
+
+    @When("{string} event to get all the merchant payments is received for merchant {string}")
+    public void eventToGetAllTheMerchantPaymentsIsReceived(String eventName, String merchantId) {
+        Event event = new Event(eventName, new Object[] { UUID.fromString(merchantId) });
+        service.handleGetMerchantPaymentsRequested(event);
     }
 }
