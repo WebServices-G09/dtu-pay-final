@@ -3,6 +3,7 @@ package steps;
 import com.google.gson.Gson;
 import dtu.dtuPay.models.Payment;
 import dtu.dtuPay.repositeries.PaymentRepository;
+import dtu.dtuPay.services.CorrelationId;
 import dtu.dtuPay.services.PaymentService;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -25,6 +26,7 @@ public class PaymentSteps {
     private double amount;
     private Payment expectedPayment;
     private List<Payment> expectedPaymentList;
+    private CorrelationId correlationId;
 
     public PaymentSteps() {}
 
@@ -71,7 +73,8 @@ public class PaymentSteps {
 
     @When("{string} event to get all payments is received")
     public void eventToGetAllPaymentsIsReceived(String eventName) {
-        Event event = new Event(eventName, new Object[] {});
+        correlationId = CorrelationId.randomId();
+        Event event = new Event(eventName, new Object[] { correlationId });
         service.handleGetPaymentsRequested(event);
     }
 
@@ -81,7 +84,7 @@ public class PaymentSteps {
         Gson gson = new Gson();
         String jsonString = gson.toJson(expectedPaymentList.toArray());
 
-        Event event = new Event(eventName, new Object[] { jsonString });
+        Event event = new Event(eventName, new Object[] { correlationId, jsonString });
         verify(queue).publish(event);
 
         // Deserialize List object
@@ -111,7 +114,8 @@ public class PaymentSteps {
 
     @When("{string} event to get all the customer payments is received for customer {string}")
     public void eventToGetAllTheCustomerPaymentsIsReceived(String eventName, String customerId) {
-        Event event = new Event(eventName, new Object[] { UUID.fromString(customerId) });
+        correlationId = CorrelationId.randomId();
+        Event event = new Event(eventName, new Object[] { correlationId, UUID.fromString(customerId) });
         service.handleGetCustomerPaymentsRequested(event);
     }
 
@@ -131,7 +135,8 @@ public class PaymentSteps {
 
     @When("{string} event to get all the merchant payments is received for merchant {string}")
     public void eventToGetAllTheMerchantPaymentsIsReceived(String eventName, String merchantId) {
-        Event event = new Event(eventName, new Object[] { UUID.fromString(merchantId) });
+        correlationId = CorrelationId.randomId();
+        Event event = new Event(eventName, new Object[] { correlationId, UUID.fromString(merchantId) });
         service.handleGetMerchantPaymentsRequested(event);
     }
 }
