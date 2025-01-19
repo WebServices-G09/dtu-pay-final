@@ -31,14 +31,14 @@ public class PaymentSteps {
     public PaymentSteps() {}
 
     // pay service test
-    @When("{string} event to execute a payment is recived")
-    public void eventToExecuteAPaymentIsRecived(String eventName) {
-        // Needs to be updated for token and merchant id validation?
+    @When("{string} event to execute a payment is received")
+    public void eventToExecuteAPaymentIsReceived(String eventName) {
+        correlationId = CorrelationId.randomId();
         customerToken = UUID.randomUUID();
         merchantId = UUID.randomUUID();
         amount = 20.0;
 
-        Event event = new Event(eventName, new Object[] {customerToken, merchantId, amount});
+        Event event = new Event(eventName, new Object[] { correlationId, customerToken, merchantId, amount });
         service.handlePaymentRequested(event);
     }
 
@@ -50,7 +50,7 @@ public class PaymentSteps {
                         payment.getAmount() == amount)
                 .findFirst().orElse(null);
 
-        Event event = new Event(eventName, new Object[] {expectedPayment});
+        Event event = new Event(eventName, new Object[] { correlationId, true, expectedPayment.getId()});
         verify(queue).publish(event);
     }
 
@@ -62,6 +62,7 @@ public class PaymentSteps {
     // getPayments service test
     @Given("a list of payments are present in the payment repository")
     public void aListOfPaymentsArePresentInThePaymentRepository() {
+        repository.dropData();
         expectedPaymentList = new ArrayList<>(){};
 
         for (int i = 0; i < 3; i++) {

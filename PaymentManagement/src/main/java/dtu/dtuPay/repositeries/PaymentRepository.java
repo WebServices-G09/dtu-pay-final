@@ -78,4 +78,10 @@ public class PaymentRepository {
 
         merchantPaymentsIdList.add(paymentId);
     }
+
+    public void dropData() {
+        this.payments.clear();
+        this.customerPayments.clear();
+        this.merchantPayments.clear();
+    }
 }
