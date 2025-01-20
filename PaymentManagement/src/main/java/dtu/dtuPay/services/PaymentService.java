@@ -78,7 +78,7 @@ public class PaymentService {
         }
     }
 
-    private CompletableFuture<UUID>  validateCustomerToken(UUID customerToken, UUID paymentId, CorrelationId paymentCorrelationId) {
+    private UUID validateCustomerToken(UUID customerToken, UUID paymentId, CorrelationId paymentCorrelationId) {
         CorrelationId customerValidationCorrelationId = CorrelationId.randomId();
         CompletableFuture<UUID> futureCustomerTokenValidation = new CompletableFuture<>();
         tokenValidationCorrelation.put(customerValidationCorrelationId, futureCustomerTokenValidation);
@@ -93,7 +93,7 @@ public class PaymentService {
             }
         });
 
-        return futureCustomerTokenValidation;
+        return futureCustomerTokenValidation.join();
     }
 
     private void handleMerchantAccountValidationResponse(Event ev) {
@@ -108,7 +108,7 @@ public class PaymentService {
         }
     }
 
-    public void validateMerchantAccount(UUID merchantId, CorrelationId paymentCorrelationId) {
+    public boolean validateMerchantAccount(UUID merchantId, CorrelationId paymentCorrelationId) {
         CorrelationId merchantValidationCorrelationId = CorrelationId.randomId();
         CompletableFuture<Boolean> futureMerchantValidation = new CompletableFuture<>();
         correlations.put(merchantValidationCorrelationId, futureMerchantValidation);
@@ -122,6 +122,8 @@ public class PaymentService {
                 publishPaymentExceptionally(paymentCorrelationId, false, throwable.getMessage());
             }
         });
+
+        return futureMerchantValidation.join();
     }
 
     private void handleUseTokenResponse(Event ev) {
@@ -137,7 +139,7 @@ public class PaymentService {
 
     }
 
-    private void markTokenAsUsed(UUID customerToken, CorrelationId paymentCorrelationId) {
+    private boolean markTokenAsUsed(UUID customerToken, CorrelationId paymentCorrelationId) {
         CorrelationId useTokenCorrelationId = CorrelationId.randomId();
         CompletableFuture<Boolean> futureUseToken = new CompletableFuture<>();
         correlations.put(useTokenCorrelationId, futureUseToken);
@@ -150,6 +152,8 @@ public class PaymentService {
                 publishPaymentExceptionally(paymentCorrelationId, false, throwable.getMessage());
             }
         });
+
+        return futureUseToken.join();
     }
 
     public void handlePaymentRequested(Event ev) {
@@ -161,24 +165,23 @@ public class PaymentService {
         Payment payment = new Payment(customerToken, merchantId, amount);
 
         // Merchant account validation
-        validateMerchantAccount(merchantId, correlationId);
+        boolean merchantIsValid = validateMerchantAccount(merchantId, correlationId);
 
         // Customer Token Validation, saves customerId -> PaymentId in repository
-        CompletableFuture<UUID> futureCustomerTokenValidation = validateCustomerToken(customerToken, payment.getId(), correlationId);
+        UUID customerId = validateCustomerToken(customerToken, payment.getId(), correlationId);
 
         // Mark token as used
-        markTokenAsUsed(customerToken, correlationId);
-
-        futureCustomerTokenValidation.thenAccept(responseCustomerId -> {
-            paymentRepository.addCustomerPayment(responseCustomerId, payment.getId());
-        });
+        boolean tokenIsUsed = markTokenAsUsed(customerToken, correlationId);
 
         // Save customer and merchant payment info
-        paymentRepository.addMerchantPayment(merchantId, payment.getId());
-        paymentRepository.addPayment(payment);
+        if (merchantIsValid && tokenIsUsed && customerId != null) {
+            paymentRepository.addCustomerPayment(customerId, payment.getId());
+            paymentRepository.addMerchantPayment(merchantId, payment.getId());
+            paymentRepository.addPayment(payment);
 
-        // Publish completion event
-        publishPaymentCompleted(correlationId, true, payment.getId());
+            // Publish completion event
+            publishPaymentCompleted(correlationId, true, payment.getId());
+        }
     }
 
     public void handleGetMerchantPaymentsRequested(Event ev) {

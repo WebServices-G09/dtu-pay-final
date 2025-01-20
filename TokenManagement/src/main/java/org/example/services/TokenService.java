@@ -5,7 +5,6 @@ import messaging.MessageQueue;
 import org.example.models.Token;
 import org.example.repositories.TokenRepository;
 
-import java.util.List;
 import java.util.UUID;
 
 public class TokenService {

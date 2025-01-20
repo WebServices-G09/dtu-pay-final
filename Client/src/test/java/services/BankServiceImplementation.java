@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public class BankServiceImplementation implements IBankService {
 
     @Override
-    public String createAccount(String firstName, String lastName, String cpr, BigDecimal initialBalance) {
+    public String createAccount(User firstName, String lastName, String cpr, BigDecimal initialBalance) {
         try {
 
             BankServiceService bankServiceService = new BankServiceService();
