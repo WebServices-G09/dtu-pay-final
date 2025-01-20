@@ -3,7 +3,7 @@ package steps;
 import com.google.gson.Gson;
 import dtu.dtuPay.models.Payment;
 import dtu.dtuPay.repositeries.PaymentRepository;
-import dtu.dtuPay.services.CorrelationId;
+import dtu.dtuPay.models.CorrelationId;
 import dtu.dtuPay.services.PaymentService;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;

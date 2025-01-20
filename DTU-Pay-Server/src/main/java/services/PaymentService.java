@@ -3,7 +3,7 @@ package services;
 import messaging.Event;
 import messaging.MessageQueue;
 import messaging.implementations.RabbitMqQueue;
-import models.dtos.CorrelationId;
+import models.CorrelationId;
 import models.dtos.PaymentRequestDto;
 
 import java.util.Map;
@@ -59,7 +59,7 @@ public class PaymentService {
         boolean isPaymentSuccessfull = event.getArgument(1, Boolean.class);
 
         if (!isPaymentSuccessfull) {
-            Exception exception = event.getArgument(2, Exception.class);
+            Throwable exception = event.getArgument(2, Throwable.class);
             correlations.get(correlationId).completeExceptionally(exception);
             return;
         }

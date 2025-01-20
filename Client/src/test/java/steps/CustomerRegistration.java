@@ -66,7 +66,7 @@ public class CustomerRegistration {
         payloadUser.setFirstName(userCustomer.getFirstName());
         payloadUser.setLastName(userCustomer.getLastName());
         payloadUser.setCpr(userCustomer.getCprNumber());
-        payloadUser.setBankAccountNumber(accountId);
+        payloadUser.setBankAccountId(accountId);
 
         customerId = customerService.createCustomer(payloadUser);
         assertNotNull(customerId, "Customer ID should not be null");

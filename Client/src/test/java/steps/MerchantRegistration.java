@@ -66,7 +66,7 @@ public class MerchantRegistration {
         payloadUser.setFirstName(userMerchant.getFirstName());
         payloadUser.setLastName(userMerchant.getLastName());
         payloadUser.setCpr(userMerchant.getCprNumber());
-        payloadUser.setBankAccountNumber(accountId);
+        payloadUser.setBankAccountId(accountId);
 
         merchantId = merchantService.createMerchant(payloadUser);
         assertNotNull(merchantId, "merchant ID should not be null");

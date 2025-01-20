@@ -1,4 +1,4 @@
-package models.dtos;
+package dtu.dtuPay.models;
 
 import lombok.Value;
 

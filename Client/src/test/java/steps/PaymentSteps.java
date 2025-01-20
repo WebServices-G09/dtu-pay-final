@@ -71,7 +71,7 @@ public class PaymentSteps {
         payloadUser.setFirstName(userCustomer.getFirstName());
         payloadUser.setLastName(userCustomer.getLastName());
         payloadUser.setCpr(userCustomer.getCprNumber());
-        payloadUser.setBankAccountNumber(customerBankAccountId);
+        payloadUser.setBankAccountId(customerBankAccountId);
 
         customerId = customerService.createCustomer(payloadUser);
         assertNotNull(customerId, "Customer ID should not be null");
@@ -103,7 +103,7 @@ public class PaymentSteps {
         payloadUser.setFirstName(userMerchant.getFirstName());
         payloadUser.setLastName(userMerchant.getLastName());
         payloadUser.setCpr(userMerchant.getCprNumber());
-        payloadUser.setBankAccountNumber(merchantBankAccountId);
+        payloadUser.setBankAccountId(merchantBankAccountId);
 
         merchantId = merchantService.createMerchant(payloadUser);
         assertNotNull(merchantId, "merchant ID should not be null");
