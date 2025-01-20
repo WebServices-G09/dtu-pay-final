@@ -1,6 +1,10 @@
 
-package dtu.fastmoney;
+package dtu.ws.fastmoney;
 
+import dtu.ws.fastmoney.Account;
+import dtu.ws.fastmoney.BankServiceException_Exception;
+import dtu.ws.fastmoney.ObjectFactory;
+import dtu.ws.fastmoney.User;
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebParam;
 import jakarta.jws.WebResult;
@@ -36,7 +40,7 @@ public interface BankService {
     @WebResult(targetNamespace = "")
     @RequestWrapper(localName = "getAccount", targetNamespace = "http://fastmoney.ws.dtu/", className = "dtu.ws.fastmoney.GetAccount")
     @ResponseWrapper(localName = "getAccountResponse", targetNamespace = "http://fastmoney.ws.dtu/", className = "dtu.ws.fastmoney.GetAccountResponse")
-    public Account getAccount(
+    public dtu.ws.fastmoney.Account getAccount(
         @WebParam(name = "account_id", targetNamespace = "")
         String accountId)
         throws BankServiceException_Exception

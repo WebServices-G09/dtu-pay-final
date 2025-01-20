@@ -59,8 +59,8 @@ public class PaymentService {
         boolean isPaymentSuccessfull = event.getArgument(1, Boolean.class);
 
         if (!isPaymentSuccessfull) {
-            Throwable exception = event.getArgument(2, Throwable.class);
-            correlations.get(correlationId).completeExceptionally(exception);
+            String exceptionMessage = event.getArgument(2, String.class);
+            correlations.get(correlationId).completeExceptionally(new Exception(exceptionMessage));
             return;
         }
 

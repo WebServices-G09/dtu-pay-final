@@ -1,5 +1,5 @@
 
-package dtu.fastmoney;
+package dtu.ws.fastmoney;
 
 import dtu.ws.fastmoney.BankService;
 import jakarta.xml.ws.*;
@@ -73,7 +73,7 @@ public class BankServiceService
     /**
      * 
      * @param features
-     *     A list of {@link jakarta.xml.ws.WebServiceFeature} to configure on the proxy.  Supported features not in the <code>features</code> parameter will have their default values.
+     *     A list of {@link WebServiceFeature} to configure on the proxy.  Supported features not in the <code>features</code> parameter will have their default values.
      * @return
      *     returns BankService
      */

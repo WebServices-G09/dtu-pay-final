@@ -1,6 +1,8 @@
 
-package dtu.fastmoney;
+package dtu.ws.fastmoney;
 
+import dtu.ws.fastmoney.Transaction;
+import dtu.ws.fastmoney.User;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;

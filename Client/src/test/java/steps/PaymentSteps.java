@@ -86,7 +86,7 @@ public class PaymentSteps {
     }
 
     @Given("merchant is registered with the bank with an initial balance of {double} kr")
-    public void merchant_is_registered_with_the_bank_with_an_initial_balance_of_kr(Double balance) {
+    public void merchant_is_registered_with_the_bank_with_an_initial_balance_of_kr(Double balance)  {
         merchantBankAccountId = bankService.createAccount(
                 userMerchant.getFirstName(),
                 userMerchant.getLastName(),

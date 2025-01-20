@@ -1,6 +1,7 @@
 
-package dtu.fastmoney;
+package dtu.ws.fastmoney;
 
+import dtu.ws.fastmoney.Account;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -33,17 +34,17 @@ import jakarta.xml.bind.annotation.XmlType;
 public class GetAccountByCprNumberResponse {
 
     @XmlElement(name = "return")
-    protected Account _return;
+    protected dtu.ws.fastmoney.Account _return;
 
     /**
      * Gets the value of the return property.
      * 
      * @return
      *     possible object is
-     *     {@link Account }
+     *     {@link dtu.ws.fastmoney.Account }
      *     
      */
-    public Account getReturn() {
+    public dtu.ws.fastmoney.Account getReturn() {
         return _return;
     }
 
@@ -52,7 +53,7 @@ public class GetAccountByCprNumberResponse {
      * 
      * @param value
      *     allowed object is
-     *     {@link Account }
+     *     {@link dtu.ws.fastmoney.Account }
      *     
      */
     public void setReturn(Account value) {
