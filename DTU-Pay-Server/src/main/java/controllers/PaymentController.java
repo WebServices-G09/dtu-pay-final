@@ -8,12 +8,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import models.dtos.PaymentRequestDto;
 import services.PaymentService;
-import services.PaymentServiceFactory;
 
 
 @Path("payments")
 public class PaymentController {
-    PaymentService service = new PaymentServiceFactory().getService();
+    PaymentService service = PaymentService.getInstance();
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

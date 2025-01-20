@@ -2,6 +2,7 @@ package dtu.dtuPay.services;
 
 import com.google.gson.Gson;
 import dtu.dtuPay.models.Payment;
+import dtu.dtuPay.models.PaymentRequestDto;
 import dtu.dtuPay.repositeries.PaymentRepository;
 import messaging.Event;
 import messaging.MessageQueue;
@@ -158,25 +159,27 @@ public class PaymentService {
 
     public void handlePaymentRequested(Event ev) {
         CorrelationId correlationId = ev.getArgument(0, CorrelationId.class);
-        UUID customerToken = ev.getArgument(1, UUID.class);
-        UUID merchantId = ev.getArgument(2, UUID.class);
-        double amount = ev.getArgument(3, double.class);
+        PaymentRequestDto paymentRequestDto = ev.getArgument(1, PaymentRequestDto.class);
 
-        Payment payment = new Payment(customerToken, merchantId, amount);
+        Payment payment = new Payment(
+                paymentRequestDto.getCustomerToken(),
+                paymentRequestDto.getMerchantId(),
+                paymentRequestDto.getAmount()
+        );
 
         // Merchant account validation
-        boolean merchantIsValid = validateMerchantAccount(merchantId, correlationId);
+        boolean merchantIsValid = validateMerchantAccount(paymentRequestDto.getMerchantId(), correlationId);
 
         // Customer Token Validation, saves customerId -> PaymentId in repository
-        UUID customerId = validateCustomerToken(customerToken, payment.getId(), correlationId);
+        UUID customerId = validateCustomerToken(paymentRequestDto.getCustomerToken(), payment.getId(), correlationId);
 
         // Mark token as used
-        boolean tokenIsUsed = markTokenAsUsed(customerToken, correlationId);
+        boolean tokenIsUsed = markTokenAsUsed(paymentRequestDto.getCustomerToken(), correlationId);
 
         // Save customer and merchant payment info
         if (merchantIsValid && tokenIsUsed && customerId != null) {
             paymentRepository.addCustomerPayment(customerId, payment.getId());
-            paymentRepository.addMerchantPayment(merchantId, payment.getId());
+            paymentRepository.addMerchantPayment(paymentRequestDto.getMerchantId(), payment.getId());
             paymentRepository.addPayment(payment);
 
             // Publish completion event

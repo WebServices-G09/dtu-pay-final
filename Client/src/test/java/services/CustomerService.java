@@ -15,7 +15,7 @@ public class CustomerService {
     ICustomerServiceClient service = baseURL.proxy(ICustomerServiceClient.class);
 
     public UUID createCustomer(UserRequestDto user){
-        Response response = service.postCustomer(user);
+        Response response = service.registerCustomer(user);
 
         return response.readEntity(UUID.class);
     }

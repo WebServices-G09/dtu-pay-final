@@ -17,6 +17,7 @@ public class CustomerController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response registerCustomer(CreateCustomerDto customerRequest) {
+        System.out.println("Registering Customer");
         try {
             var newCustomer = service.createCustomer(customerRequest);
 
