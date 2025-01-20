@@ -1,10 +1,13 @@
 package org.example.services;
 
+import io.cucumber.java.an.E;
 import messaging.Event;
 import messaging.MessageQueue;
 import org.example.models.Token;
 import org.example.repositories.TokenRepository;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class TokenService {
@@ -14,7 +17,7 @@ public class TokenService {
     private static final String CUSTOMER_TOKENS_REQUESTED = "CustomerTokensRequest";
     private static final String CUSTOMER_TOKENS_RETURNED = "CustomerTokensReturned";
     private static final String REQUEST_TOKENS_EVENT = "RequestTokensEvent";
-    private static final String REQUEST_TOKENS_RESONSE = "RequestTokensResponse";
+    private static final String REQUEST_TOKENS_RESPONSE = "RequestTokensResponse";
     private static final String USE_TOKEN_REQUEST = "UseTokenRequest";
     private static final String USE_TOKEN_RESPONSE = "UseTokenResponse";
 
@@ -39,13 +42,13 @@ public class TokenService {
         if (!isValid) {
             boolean exists = tokenRepository.getAllTokens().stream().anyMatch(token -> token.getUuid().equals(uuid));
             if (!exists) {
-                Event event = new Event(TOKEN_VALIDATION_RETURNED, new Object[] {new Exception("Token not found.")});
+                Event event = new Event(TOKEN_VALIDATION_RETURNED, new Object[]{"Token not found."});
                 queue.publish(event);
                 return;
             }
         }
 
-        Event event = new Event(TOKEN_VALIDATION_RETURNED, new Object[] {isValid});
+        Event event = new Event(TOKEN_VALIDATION_RETURNED, new Object[]{isValid});
         queue.publish(event);
     }
 
@@ -63,14 +66,41 @@ public class TokenService {
     }
 
     public void handleRequestTokensEvent(Event e) {
-        //logic
-        Event event = new Event(REQUEST_TOKENS_RESONSE, new Object[] {});
+    	UUID uuid = e.getArgument(0, UUID.class);
+    	Integer requestedTokens = e.getArgument(1, Integer.class);
+    	List<Token> tokenList = tokenRepository.getTokens(uuid);
+    	
+    	if(requestedTokens <= 5) {
+    		
+    		if(tokenList.size() <= 1) {
+    			List<Token> newTokenList = new ArrayList<>();
+    			for (int i = 0; i < requestedTokens; i++) {
+    				Token newToken = new Token(UUID.randomUUID(), true);
+    				  newTokenList.add(newToken);	  
+    				}
+    			tokenRepository.addTokens(uuid, newTokenList);
+    			Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] {newTokenList.size()});
+                queue.publish(event);
+                return;
+    		}
+    		
+    		Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] {new Exception("Too many active tokens")});
+            queue.publish(event);
+            return;
+    		
+    	}
+
+        Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] {new Exception("Too many tokens requested")});
         queue.publish(event);
     }
 
     public void handleUseTokenRequest(Event e) {
-        //logic
-        Event event = new Event(USE_TOKEN_RESPONSE, new Object[] {});
+        Event event = new Event(USE_TOKEN_RESPONSE, new Object[] {true});
+        try {
+            tokenRepository.useToken(e.getArgument(0, UUID.class));
+        } catch (Exception exception) {
+           event = new Event(USE_TOKEN_RESPONSE, new Object[] {new Exception(exception.getMessage())});
+        }
         queue.publish(event);
     }
 
