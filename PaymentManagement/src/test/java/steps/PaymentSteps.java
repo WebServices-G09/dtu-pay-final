@@ -5,6 +5,7 @@ import dtu.dtuPay.models.Payment;
 import dtu.dtuPay.repositeries.PaymentRepository;
 import dtu.dtuPay.models.CorrelationId;
 import dtu.dtuPay.services.PaymentService;
+import dtu.ws.fastmoney.BankServiceException_Exception;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -32,7 +33,7 @@ public class PaymentSteps {
 
     // pay service test
     @When("{string} event to execute a payment is received")
-    public void eventToExecuteAPaymentIsReceived(String eventName) {
+    public void eventToExecuteAPaymentIsReceived(String eventName) throws BankServiceException_Exception {
         correlationId = CorrelationId.randomId();
         customerToken = UUID.randomUUID();
         merchantId = UUID.randomUUID();
