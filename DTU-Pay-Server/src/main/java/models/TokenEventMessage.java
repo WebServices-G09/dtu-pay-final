@@ -19,6 +19,5 @@ public class TokenEventMessage {
     private int requestResponseCode;
     private String exceptionMessage;
 
-
     public TokenEventMessage() {}
 }

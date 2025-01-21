@@ -1,4 +1,4 @@
-package dtu.dtuPay.models;
+package models;
 
 import lombok.Data;
 import lombok.Getter;
@@ -21,6 +21,6 @@ public class AccountEventMessage {
     private int requestResponseCode;
     private String exceptionMessage;
     private Boolean isAccountDeleted;
-
+    
     public AccountEventMessage() {}
 }

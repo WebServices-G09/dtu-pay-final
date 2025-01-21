@@ -47,10 +47,10 @@ public class PaymentSteps {
         eventMessage.setMerchantId(merchantId);
         eventMessage.setAmount(amount);
 
-        Event event = new Event(eventName, new Object[] { correlationId, eventMessage });
-
         String validCustomerBankAccount = String.valueOf(UUID.randomUUID());
         String validMerchantBankAccount = String.valueOf(UUID.randomUUID());
+
+        Event event = new Event(eventName, new Object[] { correlationId, eventMessage });
 
         // Stub queue.publish to simulate event handling
         doAnswer(invocation -> {
@@ -64,15 +64,16 @@ public class PaymentSteps {
                 case "ValidateMerchantAccountRequested":
                     accountEventMessage = new AccountEventMessage();
                     accountEventMessage.setMerchantId(merchantId);
+                    accountEventMessage.setIsValidAccount(true);
                     accountEventMessage.setRequestResponseCode(OK);
-                    accountEventMessage.setCustomerBankAccount(validMerchantBankAccount);
+                    accountEventMessage.setBankAccount(validMerchantBankAccount);
                     service.accountCorrelations.get(validationCorrelationId).complete(accountEventMessage);
                     break;
                 case "GetCustomerBankAccountRequested":
                     accountEventMessage = new AccountEventMessage();
                     accountEventMessage.setCustomerId(customerId);
                     accountEventMessage.setRequestResponseCode(OK);
-                    accountEventMessage.setCustomerBankAccount(validCustomerBankAccount);
+                    accountEventMessage.setBankAccount(validCustomerBankAccount);
                     service.accountCorrelations.get(validationCorrelationId).complete(accountEventMessage);
                     break;
                 case "TokenValidationRequest":
@@ -87,7 +88,7 @@ public class PaymentSteps {
                     tokenEventMessage = new TokenEventMessage();
                     tokenEventMessage.setTokenUUID(customerToken);
                     tokenEventMessage.setRequestResponseCode(OK);
-                    tokenEventMessage.setIsValid(true);
+                    tokenEventMessage.setIsTokenUsed(true);
                     service.tokenCorrelations.get(validationCorrelationId).complete(tokenEventMessage);
                     break;
             }

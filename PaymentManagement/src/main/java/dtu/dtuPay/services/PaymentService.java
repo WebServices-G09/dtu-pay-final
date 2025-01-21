@@ -163,7 +163,7 @@ public class PaymentService {
 
         // Merchant account validation
         AccountEventMessage responseMerchantValidation = validateMerchantAccount(paymentEventMessage.getMerchantId());
-        if (!responseMerchantValidation.getIsMerchantValid() || responseMerchantValidation.getRequestResponseCode() != OK) {
+        if (!responseMerchantValidation.getIsValidAccount() || responseMerchantValidation.getRequestResponseCode() != OK) {
             paymentEventMessage.setExceptionMessage(responseMerchantValidation.getExceptionMessage());
             paymentEventMessage.setRequestResponseCode(BAD_REQUEST);
 
@@ -204,8 +204,8 @@ public class PaymentService {
         try {
             // Execute Payment
             bankService.transferMoney(
-                    responseGetCustomerBankAccount.getCustomerBankAccount(), // Debtor account
-                    responseMerchantValidation.getMerchantBankAccount(), // Creditor account
+                    responseGetCustomerBankAccount.getBankAccount(), // Debtor account
+                    responseMerchantValidation.getBankAccount(), // Creditor account
                     BigDecimal.valueOf(paymentEventMessage.getAmount()),       // Amount to transfer
                     "Money is being transferred"                               // Empty description
             );
@@ -276,10 +276,4 @@ public class PaymentService {
         Event event = new Event(PAYMENTS_FETCHED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
-
-    private String serialisePaymentListToJson(List<Payment> paymentList) {
-        Gson gson = new Gson();
-        return gson.toJson(paymentList);
-    }
-
 }

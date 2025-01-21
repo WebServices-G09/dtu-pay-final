@@ -1,4 +1,4 @@
-package dtu.dtuPay.models;
+package models;
 
 import lombok.Data;
 import lombok.Getter;
