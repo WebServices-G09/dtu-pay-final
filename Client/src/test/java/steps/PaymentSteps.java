@@ -6,11 +6,9 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import models.dtos.PaymentRequestDto;
+import models.dtos.TokenRequestDto;
 import models.dtos.UserRequestDto;
-import services.BankServiceImplementation;
-import services.CustomerService;
-import services.MerchantService;
-import services.PaymentService;
+import services.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -35,6 +33,7 @@ public class PaymentSteps {
     private CustomerService customerService = new CustomerService();
     private MerchantService merchantService = new MerchantService();
     private PaymentService paymentService = new PaymentService();
+    private TokenService tokenService = new TokenService();
 
     @io.cucumber.java.After
     public void cleanupAccounts() throws BankServiceException_Exception {
@@ -54,7 +53,8 @@ public class PaymentSteps {
     }
 
     @Given("customer is registered with the bank with an initial balance of {double} kr")
-    public void customer_is_registered_with_the_bank_with_an_initial_balance_of_kr(Double balance) {
+    public void customer_is_registered_with_the_bank_with_an_initial_balance_of_kr(Double balance) throws BankServiceException_Exception {
+        //bankService.deleteAccount(bankService.getAccountByCPR(userCustomer.getCprNumber()).getId());
         customerBankAccountId = bankService.createAccount(
                 userCustomer.getFirstName(),
                 userCustomer.getLastName(),
@@ -86,7 +86,8 @@ public class PaymentSteps {
     }
 
     @Given("merchant is registered with the bank with an initial balance of {double} kr")
-    public void merchant_is_registered_with_the_bank_with_an_initial_balance_of_kr(Double balance)  {
+    public void merchant_is_registered_with_the_bank_with_an_initial_balance_of_kr(Double balance) throws BankServiceException_Exception {
+        //bankService.deleteAccount(bankService.getAccountByCPR(userMerchant.getCprNumber()).getId());
         merchantBankAccountId = bankService.createAccount(
                 userMerchant.getFirstName(),
                 userMerchant.getLastName(),
@@ -111,9 +112,11 @@ public class PaymentSteps {
 
     @When("the merchant initiates a payment for {int} kr by the customer")
     public void the_merchant_initiates_a_payment_for_kr_by_the_customer(Integer amount) {
-        // TODO: Use customer Token instead of customerID
+        tokenService.createTokens(new TokenRequestDto(customerId, 1));
+        UUID customerToken = tokenService.getToken(customerId);
+
         paymentIsSuccessfull = paymentService.pay(
-                new PaymentRequestDto(customerId, merchantId, amount)
+                new PaymentRequestDto(customerToken, merchantId, amount)
         );
     }
 
