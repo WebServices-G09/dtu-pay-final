@@ -38,8 +38,8 @@ public class TokenService {
 
     public void handleTokenValidationRequest(Event e) {
         CorrelationId correlationId = e.getArgument(0, CorrelationId.class);
-        TokenEventMessage ventMessage = e.getArgument(1, TokenEventMessage.class);
-        UUID tokenUUID = ventMessage.getTokenUUID();
+        TokenEventMessage eventMessage = e.getArgument(1, TokenEventMessage.class);
+        UUID tokenUUID = eventMessage.getTokenUUID();
         boolean isValid = tokenRepository.getAllTokens()
                 .stream()
                 .anyMatch(token -> token.getUuid().equals(tokenUUID) && token.isValid());
@@ -47,95 +47,95 @@ public class TokenService {
         if (!isValid) {
             boolean exists = tokenRepository.getAllTokens().stream().anyMatch(token -> token.getUuid().equals(tokenUUID));
             if (!exists) {
-                ventMessage.setRequestResponseCode(BAD_REQUEST);
-                ventMessage.setExceptionMessage("Token not found.");
+                eventMessage.setRequestResponseCode(BAD_REQUEST);
+                eventMessage.setExceptionMessage("Token not found.");
                 Event event = new Event(TOKEN_VALIDATION_RETURNED,
-                        new Object[]{ correlationId, ventMessage });
+                        new Object[]{ correlationId, eventMessage });
                 queue.publish(event);
                 return;
             }
         }
 
         UUID customerId = tokenRepository.getCustomerId(tokenUUID);
-        ventMessage.setRequestResponseCode(OK);
-        ventMessage.setCustomerId(customerId);
-        ventMessage.setIsValid(isValid);
-        Event event = new Event(TOKEN_VALIDATION_RETURNED, new Object[] { correlationId, ventMessage });
+        eventMessage.setRequestResponseCode(OK);
+        eventMessage.setCustomerId(customerId);
+        eventMessage.setIsValid(isValid);
+        Event event = new Event(TOKEN_VALIDATION_RETURNED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
     public void handleCustomerTokenRequest(Event e) {
         CorrelationId correlationId = e.getArgument(0, CorrelationId.class);
-        TokenEventMessage ventMessage = e.getArgument(1, TokenEventMessage.class);
-    	UUID uuid = ventMessage.getCustomerId();
+        TokenEventMessage eventMessage = e.getArgument(1, TokenEventMessage.class);
+    	UUID uuid = eventMessage.getCustomerId();
     	Token token = tokenRepository.getTokens(uuid).stream().findAny().orElse(null);
     	if(token == null) {
-            ventMessage.setRequestResponseCode(BAD_REQUEST);
-            ventMessage.setExceptionMessage("You have no more tokens. Request more tokens.");
+            eventMessage.setRequestResponseCode(BAD_REQUEST);
+            eventMessage.setExceptionMessage("You have no more tokens. Request more tokens.");
             Event event = new Event(CUSTOMER_TOKENS_RETURNED, new Object[] {
-                    correlationId, ventMessage
+                    correlationId, eventMessage
             });
             queue.publish(event);
             return;
         }
 
-        ventMessage.setTokenUUID(token.getUuid());
-        ventMessage.setRequestResponseCode(OK);
-        Event event = new Event(CUSTOMER_TOKENS_RETURNED, new Object[] { correlationId, ventMessage });
+        eventMessage.setTokenUUID(token.getUuid());
+        eventMessage.setRequestResponseCode(OK);
+        Event event = new Event(CUSTOMER_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
     public void handleRequestTokensEvent(Event e) {
         CorrelationId correlationId = e.getArgument(0, CorrelationId.class);
-        TokenEventMessage ventMessage = e.getArgument(1, TokenEventMessage.class);
-    	UUID uuid = ventMessage.getCustomerId();
-    	Integer requestedTokens = ventMessage.getRequestedTokens();
+        TokenEventMessage eventMessage = e.getArgument(1, TokenEventMessage.class);
+    	UUID uuid = eventMessage.getCustomerId();
+    	Integer requestedTokens = eventMessage.getRequestedTokens();
     	List<Token> tokenList = tokenRepository.getTokens(uuid);
-    	
+
     	if(requestedTokens <= 5) {
-    		
+
     		if(tokenList.size() <= 1) {
     			List<Token> newTokenList = new ArrayList<>();
     			for (int i = 0; i < requestedTokens; i++) {
     				Token newToken = new Token(UUID.randomUUID(), true);
-    				  newTokenList.add(newToken);	  
+    				  newTokenList.add(newToken);
     				}
     			tokenRepository.addTokens(uuid, newTokenList);
-                ventMessage.setRequestResponseCode(OK);
-                ventMessage.setCreatedTokens(newTokenList.size());
-    			Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, ventMessage });
+                eventMessage.setRequestResponseCode(OK);
+                eventMessage.setCreatedTokens(newTokenList.size());
+    			Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, eventMessage });
                 queue.publish(event);
                 return;
     		}
 
-            ventMessage.setRequestResponseCode(BAD_REQUEST);
-            ventMessage.setExceptionMessage("Too many active tokens");
-    		Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, ventMessage });
+            eventMessage.setRequestResponseCode(BAD_REQUEST);
+            eventMessage.setExceptionMessage("Too many active tokens");
+    		Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, eventMessage });
             queue.publish(event);
             return;
-    		
+
     	}
 
-        ventMessage.setRequestResponseCode(BAD_REQUEST);
-        ventMessage.setExceptionMessage("Too many tokens requested");
-        Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, ventMessage });
+        eventMessage.setRequestResponseCode(BAD_REQUEST);
+        eventMessage.setExceptionMessage("Too many tokens requested");
+        Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
     public void handleUseTokenRequest(Event e) {
         CorrelationId correlationId = e.getArgument(0, CorrelationId.class);
-        TokenEventMessage ventMessage = e.getArgument(1, TokenEventMessage.class);
+        TokenEventMessage eventMessage = e.getArgument(1, TokenEventMessage.class);
 
-        ventMessage.setIsTokenUsed(true);
-        ventMessage.setRequestResponseCode(OK);
-        Event event = new Event(USE_TOKEN_RESPONSE, new Object[] { correlationId, ventMessage });
+        eventMessage.setIsTokenUsed(true);
+        eventMessage.setRequestResponseCode(OK);
+        Event event = new Event(USE_TOKEN_RESPONSE, new Object[] { correlationId, eventMessage });
         try {
-            tokenRepository.useToken(ventMessage.getTokenUUID());
+            tokenRepository.useToken(eventMessage.getTokenUUID());
         } catch (Exception exception) {
-            ventMessage.setRequestResponseCode(BAD_REQUEST);
-            ventMessage.setExceptionMessage(exception.getMessage());
-            ventMessage.setIsTokenUsed(false);
-            event = new Event(USE_TOKEN_RESPONSE, new Object[] { correlationId, ventMessage });
+            eventMessage.setRequestResponseCode(BAD_REQUEST);
+            eventMessage.setExceptionMessage(exception.getMessage());
+            eventMessage.setIsTokenUsed(false);
+            event = new Event(USE_TOKEN_RESPONSE, new Object[] { correlationId, eventMessage });
         }
         queue.publish(event);
     }

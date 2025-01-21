@@ -141,6 +141,8 @@ public class PaymentSteps {
 
     @Then("the payments are fetched and the {string} event is sent")
     public void thePaymentsAreFetchedAndTheEventIsSent(String eventName) {
+        expectedPaymentList.sort(Comparator.comparing(Payment::getId));
+
         eventMessage.setRequestResponseCode(OK);
         eventMessage.setPaymentList(expectedPaymentList);
 
