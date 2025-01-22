@@ -3,19 +3,21 @@ package behaviourtests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import messaging.Event;
-import messaging.implementations.RabbitMqQueue;
+import messaging.MessageQueue;
+import messaging.implementations.MessageQueueAsync;
 
-public class TestMessageQueue {
+public class TestMessageQueue extends TestUtilities {
 
-	// @Test
+	@Test
 	public void testPublishSubscribe() {
-		var q = new RabbitMqQueue();
+		var q = new MessageQueueAsync();
 		var done = new Object() {
 			boolean value = false;
 		};
@@ -27,9 +29,9 @@ public class TestMessageQueue {
 		assertTrue(done.value);
 	}
 
-	// @Test
+	@Test
 	public void testHandlerExecutedTwice() {
-		var q = new RabbitMqQueue();
+		var q = new MessageQueueAsync();
 		final var i = new Object() {
 			public int value = 0;
 		};
@@ -42,9 +44,9 @@ public class TestMessageQueue {
 		assertEquals(2, i.value);
 	}
 
-	// @Test
+	@Test
 	public void testPublishWithTwoHandlers() {
-		var q = new RabbitMqQueue();
+		var q = new MessageQueueAsync();
 		var done1 = new Object() {
 			boolean value = false;
 		};
@@ -67,11 +69,11 @@ public class TestMessageQueue {
 	 * One handler completes a CompletableFuture waited for in another handler. That
 	 * handler initiates the first handler by publishing an event.
 	 */
-	// @Test
+	@Test
 	public void testNoDeadlock() {
 		var cf = new CompletableFuture<Boolean>();
 		var done = new CompletableFuture<Boolean>();
-		var q = new RabbitMqQueue();
+		var q = new MessageQueueAsync();
 		q.addHandler("one", e -> {
 			cf.join();
 			done.complete(true); // We have reached passed the blocking join.
@@ -87,26 +89,32 @@ public class TestMessageQueue {
 									// handler for topic "two".
 	}
 
-	private void sleep(int milliseconds) {
-		try {
-			Thread.sleep(milliseconds);
-		} catch (InterruptedException e1) {
-		}
+	@Test
+	public void testDeserializationOfListsInProcessQueue() throws InterruptedException, ExecutionException {
+		var q = new MessageQueueAsync();
+		bodyTestDeserialisationOfLists(q);
+	}
+	
+	/* Test deserialization using Gson and Java records.
+	 * Gson v 2.8.6 cannot handle records as it requires
+	 * setters for the fields, Gson v 2.11.0 can, because it can
+	 * assign the arguments for the constructor based on the 
+	 * record type.
+	 */
+	@Test
+	public void testGsonDeserializationWithRecords() throws InterruptedException, ExecutionException {
+		var q = new MessageQueueAsync();
+		bodyTestDeserialisationGsonRecords(q);
 	}
 
-	// @Test
-	public void testTopicMatching() {
-		var q = new RabbitMqQueue();
-		var s = new HashSet<String>();
-		q.addHandler("one.*", e -> {
-			s.add(e.getType());
+	protected void bodyTestDeserialisationGsonRecords(MessageQueue q)
+			throws InterruptedException, ExecutionException {
+		CompletableFuture<Person> actual = new CompletableFuture<Person>();
+		q.addHandler("list", e -> {
+			actual.complete(e.getArgument(0, Person.class));
 		});
-		q.publish(new Event("one.one"));
-		q.publish(new Event("one.two"));
-		sleep(100);
-		var expected = new HashSet<String>();
-		expected.add("one.one");
-		expected.add("one.two");
-		assertEquals(expected, s);
+		Person expected = new Person("some name", 321);
+		q.publish(new Event("list", new Object[] {expected}));
+		assertEquals(expected,actual.orTimeout(1, TimeUnit.SECONDS).get());
 	}
 }

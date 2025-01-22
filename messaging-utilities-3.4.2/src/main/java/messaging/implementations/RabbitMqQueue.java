@@ -33,9 +33,10 @@ public class RabbitMqQueue implements MessageQueue {
 
 	@Override
 	public void publish(Event event) {
+		System.out.format("[x] publish(%s)\n", event);
 		String message = new Gson().toJson(event);
 		try {
-			channel.basicPublish(EXCHANGE_NAME, event.getType(), null, message.getBytes("UTF-8"));
+			channel.basicPublish(EXCHANGE_NAME, event.getTopic(), null, message.getBytes("UTF-8"));
 		} catch (IOException e) {
 			throw new Error(e);
 		}
@@ -57,6 +58,7 @@ public class RabbitMqQueue implements MessageQueue {
 
 	@Override
 	public void addHandler(String topic, Consumer<Event> handler) {
+		System.out.format("[x] addHandler(%s)\n", topic);
 		var chan = setUpChannel();
 		try {
 			String queueName = chan.queueDeclare().getQueue();
@@ -66,7 +68,7 @@ public class RabbitMqQueue implements MessageQueue {
 				String message = new String(delivery.getBody(), "UTF-8");
 
 				Event event = new Gson().fromJson(message, Event.class);
-
+				System.out.format("[x] executingHandler(%s)\n", event);
 				handler.accept(event);
 			};
 			chan.basicConsume(queueName, true, deliverCallback, consumerTag -> {

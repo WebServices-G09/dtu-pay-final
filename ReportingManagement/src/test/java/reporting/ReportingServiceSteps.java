@@ -62,7 +62,7 @@ public class ReportingServiceSteps {
 
             PaymentEventMessage paymentEventMessage;
 
-            switch (publishedEvent.getType()) {
+            switch (publishedEvent.getTopic()) {
                 case "GetPaymentsRequested":
                     paymentEventMessage = new PaymentEventMessage();
                     paymentEventMessage.setRequestResponseCode(OK);
