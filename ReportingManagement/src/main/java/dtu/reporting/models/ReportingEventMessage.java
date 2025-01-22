@@ -1,4 +1,4 @@
-package org.dtu.reporting.models;
+package dtu.reporting.models;
 
 
 import lombok.Data;

@@ -60,7 +60,7 @@ public class PaymentSteps {
             TokenEventMessage tokenEventMessage;
             UUID customerId = UUID.randomUUID();
 
-            switch (publishedEvent.getTopic()) {
+            switch (publishedEvent.getType()) {
                 case "ValidateMerchantAccountRequested":
                     accountEventMessage = new AccountEventMessage();
                     accountEventMessage.setMerchantId(merchantId);

@@ -1,4 +1,4 @@
-package org.dtu.reporting;
+package dtu.reporting;
 import messaging.Event;
 import messaging.implementations.RabbitMqQueue;
 

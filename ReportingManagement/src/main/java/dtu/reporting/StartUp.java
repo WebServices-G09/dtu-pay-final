@@ -1,7 +1,7 @@
-package org.dtu.reporting;
+package dtu.reporting;
 
 import messaging.implementations.RabbitMqQueue;
-import org.dtu.reporting.services.ReportingService;
+import dtu.reporting.services.ReportingService;
 
 public class StartUp {
     public static void main(String[] args) throws Exception {

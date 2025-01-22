@@ -1,10 +1,10 @@
-package org.dtu.reporting.services;
+package dtu.reporting.services;
 
 import messaging.Event;
 import messaging.MessageQueue;
-import org.dtu.reporting.models.CorrelationId;
-import org.dtu.reporting.models.PaymentEventMessage;
-import org.dtu.reporting.models.ReportingEventMessage;
+import dtu.reporting.models.CorrelationId;
+import dtu.reporting.models.PaymentEventMessage;
+import dtu.reporting.models.ReportingEventMessage;
 
 import java.util.HashMap;
 import java.util.UUID;
