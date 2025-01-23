@@ -3,6 +3,7 @@ package services;
 import messaging.Event;
 import messaging.MessageQueue;
 import messaging.implementations.RabbitMqQueue;
+import models.AccountEventMessage;
 import models.CorrelationId;
 import models.TokenEventMessage;
 
@@ -19,7 +20,12 @@ public class TokenService {
     private static final String USE_TOKEN_REQUEST = "UseTokenRequest";
     private static final String USE_TOKEN_RESPONSE = "UseTokenResponse";
 
+    public static final int BAD_REQUEST = 400;
+    public static final int OK = 200;
+
+
     static TokenService service = null;
+    static CustomerService customerService = CustomerService.getService();
 
     private MessageQueue queue;
     private Map<CorrelationId, CompletableFuture<TokenEventMessage>> correlations = new ConcurrentHashMap<>();
@@ -105,6 +111,21 @@ public class TokenService {
         Event useTokenEvent = new Event(USE_TOKEN_REQUEST, new Object[] { useTokenCorrelationId, tokenEventMessage });
         queue.publish(useTokenEvent);
 
-        return futureUseToken.join();
+        TokenEventMessage responseEventMessage =  futureUseToken.join();
+
+        AccountEventMessage accountMessageEvent = customerService.validateCustomerAccount(responseEventMessage.getCustomerId());
+        if (!accountMessageEvent.getIsValidAccount() || accountMessageEvent.getRequestResponseCode() != 200) {
+            responseEventMessage.setExceptionMessage(accountMessageEvent.getExceptionMessage());
+            responseEventMessage.setRequestResponseCode(BAD_REQUEST);
+
+            return responseEventMessage;
+        }
+
+        responseEventMessage.setBankAccount(accountMessageEvent.getBankAccount());
+        responseEventMessage.setRequestResponseCode(OK);
+        return responseEventMessage;
+
     }
+
+
 }
