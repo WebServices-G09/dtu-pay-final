@@ -13,12 +13,12 @@ import java.util.UUID;
 
 public class TokenService {
 
-    private static final String CUSTOMER_TOKENS_REQUESTED = "CustomerTokensRequest";
-    private static final String CUSTOMER_TOKENS_RETURNED = "CustomerTokensReturned";
-    private static final String REQUEST_TOKENS_EVENT = "RequestTokensEvent";
-    private static final String REQUEST_TOKENS_RESPONSE = "RequestTokensResponse";
-    private static final String USE_TOKEN_REQUEST = "UseTokenRequest";
-    private static final String USE_TOKEN_RESPONSE = "UseTokenResponse";
+    private static final String CREATE_TOKENS_REQUESTED = "CreateTokensRequested";
+    private static final String RESPONSE_TOKENS_CREATED = "ResponseTokensCreated";
+    private static final String GET_TOKENS_REQUESTED = "GetTokensRequested";
+    private static final String RESPONSE_GET_TOKENS_RETURNED = "ResponseGetTokensReturned";
+    private static final String USE_TOKEN_REQUESTED = "UseTokenRequested";
+    private static final String RESPONSE_TOKEN_USED = "ResponseTokenUsed";
 
     public static final int BAD_REQUEST = 400;
     public static final int OK = 200;
@@ -28,9 +28,9 @@ public class TokenService {
 
     public TokenService(MessageQueue queue) {
         this.queue = queue;
-        this.queue.addHandler(CUSTOMER_TOKENS_REQUESTED, this::handleGetCustomerTokensRequest);
-        this.queue.addHandler(REQUEST_TOKENS_EVENT, this::handleRequestTokensEvent);
-        this.queue.addHandler(USE_TOKEN_REQUEST, this::handleUseTokenRequest);
+        this.queue.addHandler(CREATE_TOKENS_REQUESTED, this::handleGetCustomerTokensRequest);
+        this.queue.addHandler(GET_TOKENS_REQUESTED, this::handleRequestTokensEvent);
+        this.queue.addHandler(USE_TOKEN_REQUESTED, this::handleUseTokenRequest);
     }
 
     public void handleGetCustomerTokensRequest(Event e) {
@@ -41,7 +41,7 @@ public class TokenService {
     	if(tokens.isEmpty()) {
             eventMessage.setRequestResponseCode(BAD_REQUEST);
             eventMessage.setExceptionMessage("You have no more tokens. Request more tokens.");
-            Event event = new Event(CUSTOMER_TOKENS_RETURNED, new Object[] {
+            Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] {
                     correlationId, eventMessage
             });
             queue.publish(event);
@@ -50,7 +50,7 @@ public class TokenService {
 
         eventMessage.setTokenList(tokens.stream().map((Token::getUuid)).toList());
         eventMessage.setRequestResponseCode(OK);
-        Event event = new Event(CUSTOMER_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
+        Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
@@ -72,14 +72,14 @@ public class TokenService {
     			tokenRepository.addTokens(uuid, newTokenList);
                 eventMessage.setRequestResponseCode(OK);
                 eventMessage.setCreatedTokens(newTokenList.size());
-    			Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, eventMessage });
+    			Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
                 queue.publish(event);
                 return;
     		}
 
             eventMessage.setRequestResponseCode(BAD_REQUEST);
             eventMessage.setExceptionMessage("Too many active tokens");
-    		Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, eventMessage });
+    		Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
             queue.publish(event);
             return;
 
@@ -87,7 +87,7 @@ public class TokenService {
 
         eventMessage.setRequestResponseCode(BAD_REQUEST);
         eventMessage.setExceptionMessage("Too many tokens requested");
-        Event event = new Event(REQUEST_TOKENS_RESPONSE, new Object[] { correlationId, eventMessage });
+        Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
@@ -103,7 +103,7 @@ public class TokenService {
             eventMessage.setRequestResponseCode(BAD_REQUEST);
             eventMessage.setExceptionMessage(ex.getMessage());
             eventMessage.setIsValid(false);
-            Event event = new Event(USE_TOKEN_RESPONSE, new Object[] { correlationId, eventMessage });
+            Event event = new Event(RESPONSE_TOKEN_USED, new Object[] { correlationId, eventMessage });
             queue.publish(event);
             return;
         }
@@ -111,7 +111,7 @@ public class TokenService {
         eventMessage.setRequestResponseCode(OK);
         eventMessage.setCustomerId(eventMessage.getCustomerId());
         eventMessage.setIsValid(true);
-        Event event = new Event(USE_TOKEN_RESPONSE, new Object[] { correlationId, eventMessage });
+        Event event = new Event(RESPONSE_TOKEN_USED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 

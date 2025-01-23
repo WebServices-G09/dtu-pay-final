@@ -13,16 +13,15 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TokenService {
-    private static final String REQUEST_TOKENS_EVENT = "RequestTokensEvent";
-    private static final String REQUEST_TOKENS_RESPONSE = "RequestTokensResponse";
-    private static final String CUSTOMER_TOKENS_REQUESTED = "CustomerTokensRequest";
-    private static final String CUSTOMER_TOKENS_RETURNED = "CustomerTokensReturned";
-    private static final String USE_TOKEN_REQUEST = "UseTokenRequest";
-    private static final String USE_TOKEN_RESPONSE = "UseTokenResponse";
+    private static final String CREATE_TOKENS_REQUESTED = "CreateTokensRequested";
+    private static final String RESPONSE_TOKENS_CREATED = "ResponseTokensCreated";
+    private static final String GET_TOKENS_REQUESTED = "GetTokensRequested";
+    private static final String RESPONSE_GET_TOKENS_RETURNED = "ResponseGetTokensReturned";
+    private static final String USE_TOKEN_REQUESTED = "UseTokenRequested";
+    private static final String RESPONSE_TOKEN_USED = "ResponseTokenUsed";
 
     public static final int BAD_REQUEST = 400;
     public static final int OK = 200;
-
 
     static TokenService service = null;
     static CustomerService customerService = CustomerService.getService();
@@ -45,9 +44,9 @@ public class TokenService {
 
     public TokenService(MessageQueue q) {
         queue = q;
-        queue.addHandler(REQUEST_TOKENS_RESPONSE, this::handleRequestTokensResponse);
-        queue.addHandler(CUSTOMER_TOKENS_RETURNED, this::handleCustomerTokensReturned);
-        queue.addHandler(USE_TOKEN_RESPONSE, this::handleUseTokenResponse);
+        queue.addHandler(RESPONSE_TOKENS_CREATED, this::handleRequestTokensResponse);
+        queue.addHandler(RESPONSE_GET_TOKENS_RETURNED, this::handleCustomerTokensReturned);
+        queue.addHandler(RESPONSE_TOKEN_USED, this::handleUseTokenResponse);
     }
 
     private void handleCustomerTokensReturned(Event e) {
@@ -65,7 +64,7 @@ public class TokenService {
         TokenEventMessage eventMessage = new TokenEventMessage();
         eventMessage.setCustomerId(customerId);
 
-        Event event = new Event(CUSTOMER_TOKENS_REQUESTED, new Object[] { correlationId, eventMessage });
+        Event event = new Event(GET_TOKENS_REQUESTED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
 
         return futureGetTokenCompleted.join();
@@ -87,7 +86,7 @@ public class TokenService {
         eventMessage.setRequestedTokens(nTokens);
         eventMessage.setCustomerId(customerId);
 
-        Event event = new Event(REQUEST_TOKENS_EVENT, new Object[] { correlationId, eventMessage });
+        Event event = new Event(CREATE_TOKENS_REQUESTED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
 
         return futureCreateTokensCompleted.join();
@@ -108,7 +107,7 @@ public class TokenService {
         TokenEventMessage tokenEventMessage = new TokenEventMessage();
         tokenEventMessage.setTokenUUID(customerToken);
 
-        Event useTokenEvent = new Event(USE_TOKEN_REQUEST, new Object[] { useTokenCorrelationId, tokenEventMessage });
+        Event useTokenEvent = new Event(USE_TOKEN_REQUESTED, new Object[] { useTokenCorrelationId, tokenEventMessage });
         queue.publish(useTokenEvent);
 
         TokenEventMessage responseEventMessage =  futureUseToken.join();
