@@ -6,7 +6,6 @@ import messaging.implementations.RabbitMqQueue;
 import models.CorrelationId;
 import models.TokenEventMessage;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +16,8 @@ public class TokenService {
     private static final String REQUEST_TOKENS_RESPONSE = "RequestTokensResponse";
     private static final String CUSTOMER_TOKENS_REQUESTED = "CustomerTokensRequest";
     private static final String CUSTOMER_TOKENS_RETURNED = "CustomerTokensReturned";
+    private static final String USE_TOKEN_REQUEST = "UseTokenRequest";
+    private static final String USE_TOKEN_RESPONSE = "UseTokenResponse";
 
     static TokenService service = null;
 
@@ -40,6 +41,7 @@ public class TokenService {
         queue = q;
         queue.addHandler(REQUEST_TOKENS_RESPONSE, this::handleRequestTokensResponse);
         queue.addHandler(CUSTOMER_TOKENS_RETURNED, this::handleCustomerTokensReturned);
+        queue.addHandler(USE_TOKEN_RESPONSE, this::handleUseTokenResponse);
     }
 
     private void handleCustomerTokensReturned(Event e) {
@@ -83,5 +85,26 @@ public class TokenService {
         queue.publish(event);
 
         return futureCreateTokensCompleted.join();
+    }
+
+    private void handleUseTokenResponse(Event ev) {
+        CorrelationId correlationId = ev.getArgument(0, CorrelationId.class);
+        TokenEventMessage eventMessage = ev.getArgument(1, TokenEventMessage.class);
+
+        correlations.get(correlationId).complete(eventMessage);
+    }
+
+    public TokenEventMessage useToken(UUID customerToken) {
+        CorrelationId useTokenCorrelationId = CorrelationId.randomId();
+        CompletableFuture<TokenEventMessage> futureUseToken = new CompletableFuture<>();
+        correlations.put(useTokenCorrelationId, futureUseToken);
+
+        TokenEventMessage tokenEventMessage = new TokenEventMessage();
+        tokenEventMessage.setTokenUUID(customerToken);
+
+        Event useTokenEvent = new Event(USE_TOKEN_REQUEST, new Object[] { useTokenCorrelationId, tokenEventMessage });
+        queue.publish(useTokenEvent);
+
+        return futureUseToken.join();
     }
 }
