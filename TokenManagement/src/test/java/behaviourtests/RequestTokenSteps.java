@@ -18,11 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.example.models.CorrelationId;
-import org.example.models.Token;
-import org.example.models.TokenEventMessage;
-import org.example.repositories.TokenRepository;
-import org.example.services.TokenService;
+import dtu.dtuPay.models.CorrelationId;
+import dtu.dtuPay.models.Token;
+import dtu.dtuPay.models.TokenEventMessage;
+import dtu.dtuPay.repositories.TokenRepository;
+import dtu.dtuPay.services.TokenService;
 
 public class RequestTokenSteps {
 

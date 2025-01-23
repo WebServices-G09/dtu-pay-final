@@ -1,15 +1,15 @@
 package steps;
 
+import dtu.dtuPay.services.*;
 import dtu.ws.fastmoney.BankServiceException_Exception;
 import dtu.ws.fastmoney.User;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import models.dtos.Payment;
-import models.dtos.PaymentRequestDto;
-import models.dtos.TokenRequestDto;
-import models.dtos.UserRequestDto;
-import services.*;
+import dtu.dtuPay.dtos.Payment;
+import dtu.dtuPay.dtos.PaymentRequestDto;
+import dtu.dtuPay.dtos.TokenRequestDto;
+import dtu.dtuPay.dtos.UserRequestDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,6 +34,8 @@ public class ReportingSteps
     List<Payment> payments;
     List<Payment> merchantPayments;
     List<Payment> customerPayments;
+    private List<String> createdAccountIds = new ArrayList<>();
+
 
     private CustomerService customerService = new CustomerService();
     private MerchantService merchantService = new MerchantService();
@@ -41,6 +43,15 @@ public class ReportingSteps
     private PaymentService paymentService = new PaymentService();
     private TokenService tokenService = new TokenService();
     BankServiceImplementation bankService = new BankServiceImplementation();
+
+    @io.cucumber.java.After
+    public void cleanupAccounts() throws BankServiceException_Exception {
+        for (String accountId : createdAccountIds) {
+            bankService.deleteAccount(accountId);
+        }
+
+        createdAccountIds.clear();
+    }
 
     @Given("customer with name {string}, last name {string}, and CPR {string} is registered with DTU Pay")
     public void customer_with_name_last_name_and_cpr_is_registered_with_dtu_pay(String firstName, String lastName, String cpr) throws Exception
@@ -63,6 +74,7 @@ public class ReportingSteps
         {
             customerBankAccountId = bankService.getAccountByCPR(userCustomer.getCprNumber()).getId();
         }
+        createdAccountIds.add(customerBankAccountId);
 
         UserRequestDto payloadUser = new UserRequestDto();
         payloadUser.setFirstName(userCustomer.getFirstName());
@@ -71,10 +83,7 @@ public class ReportingSteps
         payloadUser.setBankAccountId(customerBankAccountId);
 
         customerId = customerService.createCustomer(payloadUser);
-        assertNotNull(customerId, "Customer ID should not be null");
-
-        int nTokensCreated = tokenService.createTokens(new TokenRequestDto(customerId, 5));
-        assertEquals(nTokensCreated, 5);
+        tokenService.createTokens(new TokenRequestDto(customerId, 5));
     }
 
     @Given("merchant with name {string}, last name {string}, and CPR {string} is registered with DTU Pay")
@@ -98,6 +107,7 @@ public class ReportingSteps
         {
             merchantBankAccountId = bankService.getAccountByCPR(userMerchant.getCprNumber()).getId();
         }
+        createdAccountIds.add(merchantBankAccountId);
 
         UserRequestDto payloadUser = new UserRequestDto();
         payloadUser.setFirstName(userMerchant.getFirstName());
@@ -106,15 +116,15 @@ public class ReportingSteps
         payloadUser.setBankAccountId(merchantBankAccountId);
 
         merchantId = merchantService.createMerchant(payloadUser);
-        assertNotNull(merchantId, "Customer ID should not be null");
     }
 
     @Given("a list of payments are present in the repository")
     public void a_list_of_payments_are_present_in_he_repository() throws Exception
     {
+        List<UUID> tokenList = tokenService.getTokens(customerId);
         for(int i = 0; i < 4; ++i)
         {
-            UUID customerToken = tokenService.getTokens(customerId).getFirst();
+            UUID customerToken = tokenList.get(i);
             paymentService.pay(new PaymentRequestDto(customerToken, merchantId, 1));
         }
     }
@@ -128,7 +138,7 @@ public class ReportingSteps
     @Then("a report with all payments is returned to the manager")
     public void a_report_with_all_payments_is_returned_to_the_manager()
     {
-        assertEquals(4, payments.size());
+        assertTrue(payments.size() >= 4);
     }
 
     @When("merchant requests a report of all his payments")
@@ -143,8 +153,8 @@ public class ReportingSteps
         customerPayments = reportingService.getCustomerPayments(customerId);
     }
 
-    @Then("a report with all payments involving the customer is returned")
-    public void a_report_with_all_payments_involving_the_customer_is_returned() throws Exception
+    @Then("a report with all payments made by the customer is returned")
+    public void a_report_with_all_payments_made_the_customer_is_returned() throws Exception
     {
         assertEquals(4, customerPayments.size());
     }

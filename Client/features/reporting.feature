@@ -1,10 +1,6 @@
 Feature: reporting
 
   Scenario: Manager requests report of all payments
-    When a manager requests all reports
-    Then a report with all payments is returned to the manager
-
-  Scenario: Manager requests report of all payments
     Given customer with name "Susan", last name "Baldwin", and CPR "129291-1427" is registered with DTU Pay
     And merchant with name "Daniel", last name "Oliver", and CPR "192297-1647" is registered with DTU Pay
     And a list of payments are present in the repository
