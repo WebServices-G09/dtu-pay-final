@@ -4,6 +4,19 @@ Feature: customer
     Then the customer is registered with the bank with an initial balance of 1000 kr
     And the customer is registered with Simple DTU Pay using their bank account
 
+  Scenario: Deregister Customer
+    Given a customer with name "Susan", last name "Baldwin", and CPR "130554-2222"
+    And the customer is registered with the bank with an initial balance of 1000 kr
+    And the customer is registered with Simple DTU Pay using their bank account
+    When the customer unregisters
+    Then the customer is not registered anymore
+#
+#  Scenario: Validate Customer Account
+#    Given a customer with name "Susan", last name "Doe", CPR "891291-222" and bank account "fds234jj" is registered with DTU Pay
+#    When a "ValidateCustomerAccountRequested" event for validating a customer is received
+#    Then the "CustomerAccountValidated" customer event is sent
+#    And the customer account is valid
+
 #  Scenario: Customer cannot request more tokens due to too many active tokens
 #    Given customer with name "Susan", last name "Baldwin", and CPR "129291-1429"
 #    And customer is registered with the bank
