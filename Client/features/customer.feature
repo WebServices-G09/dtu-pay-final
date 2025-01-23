@@ -5,7 +5,7 @@ Feature: customer
     And the customer is registered with Simple DTU Pay using their bank account
 
   Scenario: Deregister Customer
-    Given a customer with name "Susan", last name "Baldwin", and CPR "130554-2222"
+    Given a customer with name "Lisa", last name "Baldwin", and CPR "130554-2222"
     And the customer is registered with the bank with an initial balance of 1000 kr
     And the customer is registered with Simple DTU Pay using their bank account
     When the customer unregisters
