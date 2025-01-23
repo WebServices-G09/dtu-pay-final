@@ -1,8 +1,10 @@
 package steps;
 
+import dtu.ws.fastmoney.Account;
 import dtu.ws.fastmoney.BankServiceException;
 import dtu.ws.fastmoney.BankServiceException_Exception;
 import dtu.ws.fastmoney.User;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PaymentSteps {
@@ -178,4 +181,15 @@ public class PaymentSteps {
         assertEquals(mesasage, exceptionMessage);
     }
 
+    @And("merchant is not registered with the bank")
+    public void merchantIsNotRegisteredWithTheBank()
+    {
+        assertThrows(BankServiceException_Exception.class, () -> bankService.getAccount(merchantBankAccountId));
+    }
+
+    @And("the customer gets unregistered")
+    public void theCustomerGetsUnregistered() throws Exception
+    {
+        customerService.unregisterCustomer(customerId);
+    }
 }
