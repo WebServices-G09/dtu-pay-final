@@ -62,7 +62,7 @@ public class RequestTokenSteps {
 		tokenEventMessage = new TokenEventMessage();
 		tokenEventMessage.setCustomerId(UUID.fromString(uuid));
 		tokenEventMessage.setRequestedTokens(int1);
-		tokenService.handleRequestTokensEvent(new Event(RequestTokensEvent, new Object[] { correlationId, tokenEventMessage}));
+		tokenService.handleCreateTokensRequested(new Event(RequestTokensEvent, new Object[] { correlationId, tokenEventMessage}));
 	}
 
 	@Then("a response RequestTokensResponse {string} is sent and throws and exception {string}")
@@ -89,7 +89,7 @@ public class RequestTokenSteps {
 		tokenEventMessage = new TokenEventMessage();
 		tokenEventMessage.setCustomerId(UUID.fromString(uuid));
 		tokenEventMessage.setRequestedTokens(int1);
-		tokenService.handleRequestTokensEvent(new Event(RequestTokensEvent, new Object[] { correlationId, tokenEventMessage}));
+		tokenService.handleCreateTokensRequested(new Event(RequestTokensEvent, new Object[] { correlationId, tokenEventMessage}));
 	}
 
 	@Then("a response RequestTokensResponse {string} is sent containing a list with {int} new tokens")

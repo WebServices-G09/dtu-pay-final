@@ -57,7 +57,7 @@ public class GetTokenSteps {
 		correlationId = CorrelationId.randomId();
 		tokenEventMessage = new TokenEventMessage();
 		tokenEventMessage.setCustomerId(userUUID);
-		tokenService.handleGetCustomerTokensRequest(new Event(CustomerTokensRequest, new Object[] { correlationId, tokenEventMessage}));
+		tokenService.handleGetTokensRequested(new Event(CustomerTokensRequest, new Object[] { correlationId, tokenEventMessage}));
 	}
 
 	@Then("a response CustomerTokensReturned {string} is sent and a customer receives a list of tokens")

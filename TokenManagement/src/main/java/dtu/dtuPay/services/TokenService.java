@@ -28,12 +28,12 @@ public class TokenService {
 
     public TokenService(MessageQueue queue) {
         this.queue = queue;
-        this.queue.addHandler(CREATE_TOKENS_REQUESTED, this::handleGetCustomerTokensRequest);
-        this.queue.addHandler(GET_TOKENS_REQUESTED, this::handleRequestTokensEvent);
+        this.queue.addHandler(GET_TOKENS_REQUESTED, this::handleGetTokensRequested);
+        this.queue.addHandler(CREATE_TOKENS_REQUESTED, this::handleCreateTokensRequested);
         this.queue.addHandler(USE_TOKEN_REQUESTED, this::handleUseTokenRequest);
     }
 
-    public void handleGetCustomerTokensRequest(Event e) {
+    public void handleGetTokensRequested(Event e) {
         CorrelationId correlationId = e.getArgument(0, CorrelationId.class);
         TokenEventMessage eventMessage = e.getArgument(1, TokenEventMessage.class);
     	UUID uuid = eventMessage.getCustomerId();
@@ -41,7 +41,7 @@ public class TokenService {
     	if(tokens.isEmpty()) {
             eventMessage.setRequestResponseCode(BAD_REQUEST);
             eventMessage.setExceptionMessage("You have no more tokens. Request more tokens.");
-            Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] {
+            Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] {
                     correlationId, eventMessage
             });
             queue.publish(event);
@@ -50,11 +50,11 @@ public class TokenService {
 
         eventMessage.setTokenList(tokens.stream().map((Token::getUuid)).toList());
         eventMessage.setRequestResponseCode(OK);
-        Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] { correlationId, eventMessage });
+        Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
-    public void handleRequestTokensEvent(Event e) {
+    public void handleCreateTokensRequested(Event e) {
         CorrelationId correlationId = e.getArgument(0, CorrelationId.class);
         TokenEventMessage eventMessage = e.getArgument(1, TokenEventMessage.class);
     	UUID uuid = eventMessage.getCustomerId();
@@ -72,14 +72,14 @@ public class TokenService {
     			tokenRepository.addTokens(uuid, newTokenList);
                 eventMessage.setRequestResponseCode(OK);
                 eventMessage.setCreatedTokens(newTokenList.size());
-    			Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
+    			Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] { correlationId, eventMessage });
                 queue.publish(event);
                 return;
     		}
 
             eventMessage.setRequestResponseCode(BAD_REQUEST);
             eventMessage.setExceptionMessage("Too many active tokens");
-    		Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
+    		Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] { correlationId, eventMessage });
             queue.publish(event);
             return;
 
@@ -87,7 +87,7 @@ public class TokenService {
 
         eventMessage.setRequestResponseCode(BAD_REQUEST);
         eventMessage.setExceptionMessage("Too many tokens requested");
-        Event event = new Event(RESPONSE_GET_TOKENS_RETURNED, new Object[] { correlationId, eventMessage });
+        Event event = new Event(RESPONSE_TOKENS_CREATED, new Object[] { correlationId, eventMessage });
         queue.publish(event);
     }
 
